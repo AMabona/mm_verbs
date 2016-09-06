@@ -1,0 +1,43 @@
+#!/usr/bin/env python2.7
+
+import cPickle as pkl
+import umsgpack as mp
+import numpy as np
+from argparse import ArgumentParser
+
+def recursive_coerce(obj):
+    print type(obj)
+    print obj
+    if isinstance(obj, np.ndarray):
+        print "found numpy array"
+        new_obj = obj.tolist()
+
+    elif (isinstance(obj, list) or isinstance(obj, tuple)):
+        print "Not numpy array but recursing"
+        new_obj = [recursive_coerce(ex) for ex in obj]
+        if isinstance(obj, tuple):
+            new_obj = tuple(new_obj)
+    else:
+        print "None of the above"
+        new_obj = obj
+    return new_obj
+
+
+
+def main(infile, outfile):
+    data = pkl.load(open(infile, "rb"))
+    data = recursive_coerce(data)
+    print data
+    mp.dump(data, open(outfile, "wb"))
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument("-i", dest = "infile",
+                        action = "store",
+                        type = str)
+    parser.add_argument("-o", dest = "outfile",
+                        action = "store",
+                        type = str)
+    opts = parser.parse_args()
+    main(opts.infile, opts.outfile)
